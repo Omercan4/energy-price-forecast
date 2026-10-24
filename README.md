@@ -20,6 +20,29 @@ That sentence decides which inputs are allowed. The prices of day D-1 are known,
 for day D are known, measured weather is not. The tests check that changing the prices of day D does not change
 a single feature of day D (`tests/test_features.py`).
 
+## Architecture
+
+```mermaid
+flowchart TB
+    smard[("SMARD<br/>prices, grid forecasts")] --> data
+    meteo[("Open-Meteo<br/>weather forecasts")] --> data
+    data["data<br/>download, cache, quality checks"] --> feat["features<br/>calendar, weather forecast,<br/>price lags on the local clock"]
+    feat --> bt["backtest<br/>12 rolling months,<br/>trained on the past only"]
+    feat --> train["train<br/>LightGBM q10 q50 q90<br/>+ conformal interval"]
+    bt --> res["results, figures,<br/>anomaly examples, SHAP"]
+    bt --> mlf[("MLflow")]
+    train --> model[["models/champion.joblib<br/>+ metadata"]]
+
+    subgraph daily [Daily GitHub Action, 07:00 UTC]
+        direction LR
+        fcst["forecast tomorrow<br/>before the 12:00 auction"] --> mon["monitor<br/>score finished days,<br/>drift (PSI), anomalies"] --> json[("docs/*.json")]
+    end
+    model --> fcst
+    json --> pages(["GitHub Pages<br/>live page"])
+    json --> api["FastAPI<br/>/forecast /health /anomalies"]
+    json -.->|price_forecast tool| agent(["Energiewende agent"])
+```
+
 ## What is in the repository
 
 | Part | What it does |
