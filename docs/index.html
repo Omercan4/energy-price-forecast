@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Energy price forecast: Germany</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#fff; --fg:#1f2328; --muted:#656d76; --card:#f6f8fa; --line:#d0d7de; --blue:#1f6feb; --ok:#1a7f37; --bad:#cf222e; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0d1117; --fg:#e6edf3; --muted:#8b949e; --card:#161b22; --line:#30363d; --blue:#58a6ff; --ok:#3fb950; --bad:#f85149; } }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:16px; }
+  h1 { font-size:1.5rem; margin:.5rem 0 0; } h2 { font-size:1.05rem; margin:0 0 8px; }
+  p.sub { color:var(--muted); margin:.2rem 0 1rem; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin-bottom:12px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .big { font-size:1.6rem; font-weight:650; } .muted { color:var(--muted); font-size:.9rem; }
+  .ok { color:var(--ok); } .bad { color:var(--bad); }
+  canvas { max-height:340px; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; } td, th { padding:4px 6px; border-bottom:1px solid var(--line); text-align:left; }
+  footer { color:var(--muted); font-size:.85rem; margin:16px 0; }
+  a { color:var(--blue); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Day-ahead electricity price forecast, Germany</h1>
+  <p class="sub" id="sub">Loading...</p>
+
+  <div class="grid">
+    <div class="card"><div class="muted">Mean forecast</div><div class="big" id="mean">-</div><div class="muted">EUR/MWh</div></div>
+    <div class="card"><div class="muted">Cheapest hour</div><div class="big" id="cheap">-</div><div class="muted" id="cheapv"></div></div>
+    <div class="card"><div class="muted">Most expensive hour</div><div class="big" id="peak">-</div><div class="muted" id="peakv"></div></div>
+    <div class="card"><div class="muted">Model health</div><div class="big" id="health">-</div><div class="muted" id="healthd"></div></div>
+  </div>
+
+  <div class="card"><h2>Forecast for each hour (median and 80 % interval)</h2><canvas id="chart" role="img" aria-label="Hourly price forecast"></canvas></div>
+
+  <div class="grid" style="margin-top:12px">
+    <div class="card"><h2>Unusual hours, last 14 days</h2><div id="anomalies" class="muted">none yet</div></div>
+    <div class="card"><h2>Last finished days</h2><div id="history" class="muted">none yet</div></div>
+  </div>
+
+  <footer>
+    Data: Bundesnetzagentur | SMARD.de (CC BY 4.0), Open-Meteo.com (CC BY 4.0). Forecasts use only information known at 12:00 on the day before.
+    This is a portfolio project, not trading advice. <a href="https://github.com/Omercan4/energy-price-forecast">Code and model card</a>.
+  </footer>
+</main>
+<script>
+const get = (name) => fetch(name).then(r => r.ok ? r.json() : null).catch(() => null);
+const fmt = (v) => Number(v).toFixed(1);
+
+async function main() {
+  const [f, h, a, hist] = await Promise.all([get("forecast.json"), get("health.json"), get("anomalies.json"), get("history.json")]);
+  if (!f) { document.getElementById("sub").textContent = "No forecast available yet."; return; }
+  document.getElementById("sub").textContent = `Forecast for ${f.target_day}, made ${f.generated_at.replace("T", " ").slice(0, 16)} UTC`;
+  document.getElementById("mean").textContent = fmt(f.summary.mean_q50);
+  document.getElementById("cheap").textContent = String(f.summary.cheapest_hour).padStart(2, "0") + ":00";
+  document.getElementById("cheapv").textContent = fmt(f.summary.min_q50) + " EUR/MWh";
+  document.getElementById("peak").textContent = String(f.summary.most_expensive_hour).padStart(2, "0") + ":00";
+  document.getElementById("peakv").textContent = fmt(f.summary.max_q50) + " EUR/MWh";
+
+  new Chart(document.getElementById("chart"), {
+    type: "line",
+    data: {
+      labels: f.hours.map(x => String(x.hour).padStart(2, "0") + ":00"),
+      datasets: [
+        { label: "q90", data: f.hours.map(x => x.q90), borderColor: "transparent", backgroundColor: "rgba(31,111,235,.18)", fill: "+1", pointRadius: 0 },
+        { label: "q10", data: f.hours.map(x => x.q10), borderColor: "transparent", pointRadius: 0 },
+        { label: "forecast (median)", data: f.hours.map(x => x.q50), borderColor: "#1f6feb", backgroundColor: "#1f6feb", tension: .25, pointRadius: 2 },
+      ],
+    },
+    options: { plugins: { legend: { labels: { filter: (i) => i.text !== "q10" && i.text !== "q90" } } }, scales: { y: { title: { display: true, text: "EUR/MWh" } } } },
+  });
+
+  const box = document.getElementById("health"), hd = document.getElementById("healthd");
+  if (h && h.days > 0) {
+    box.textContent = h.status === "ok" ? "OK" : "Alert";
+    box.className = "big " + (h.status === "ok" ? "ok" : "bad");
+    hd.textContent = `30-day MAE ${h.rolling_mae} (backtest ${h.backtest_mae}, last week baseline ${h.rolling_mae_naive_168 ?? "n/a"})`;
+  } else { box.textContent = "starting"; hd.textContent = "needs a few finished days"; }
+
+  if (a && a.length) {
+    document.getElementById("anomalies").innerHTML = "<table><tr><th>Time</th><th>Price</th><th>Forecast</th><th>z</th></tr>" +
+      a.slice(-8).map(x => `<tr><td>${x.time.slice(0, 16).replace("T", " ")}</td><td>${fmt(x.price)}</td><td>${fmt(x.forecast)}</td><td>${x.z}</td></tr>`).join("") + "</table>";
+  }
+  if (hist && hist.length) {
+    document.getElementById("history").innerHTML = "<table><tr><th>Day</th><th>MAE</th><th>Last week</th><th>In 80 %</th></tr>" +
+      hist.slice(-7).reverse().map(x => `<tr><td>${x.day}</td><td>${x.mae}</td><td>${x.mae_naive_168 ?? "-"}</td><td>${Math.round(x.coverage_80 * 100)} %</td></tr>`).join("") + "</table>";
+  }
+}
+main();
+</script>
+</body>
+</html>

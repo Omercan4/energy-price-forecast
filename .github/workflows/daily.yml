@@ -1,0 +1,35 @@
+# Every morning (before the 12:00 CET day-ahead auction) forecast tomorrow, then score the finished days.
+# The results are committed to docs/, which GitHub Pages serves as the live page. No server, no costs.
+name: daily-forecast
+on:
+  schedule:
+    - cron: "0 7 * * *"   # 07:00 UTC, the first try
+    - cron: "0 8 * * *"   # retry if the weather forecast was not ready
+    - cron: "30 9 * * *"  # last try, still before the auction in summer (10:00 UTC) and winter (11:00 UTC)
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: daily-forecast
+  cancel-in-progress: false
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Forecast tomorrow (skipped if it exists already)
+        run: python -m epf.cli forecast
+      - name: Score finished days, update health and anomalies
+        run: python -m epf.cli monitor
+      - name: Publish
+        run: |
+          git config user.name "forecast-bot"
+          git config user.email "forecast-bot@users.noreply.github.com"
+          git add docs
+          git diff --cached --quiet || git commit -m "chore: daily forecast and monitoring update"
+          git push

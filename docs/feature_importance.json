@@ -1,0 +1,18 @@
+{
+ "price_lag_24": 24.38,
+ "wind_ns": 15.12,
+ "weekday": 10.34,
+ "price_lag_168": 9.52,
+ "rad": 8.53,
+ "price_lag_72": 7.28,
+ "wind_inland": 4.67,
+ "hour": 3.91,
+ "price_lag_48": 3.7,
+ "price_mean_prev_day": 3.59,
+ "price_min_prev_day": 2.63,
+ "price_mean_prev_7d": 2.04,
+ "temp": 1.99,
+ "price_max_prev_day": 1.42,
+ "month": 0.99,
+ "is_holiday": 0.74
+}

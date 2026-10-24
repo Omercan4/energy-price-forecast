@@ -1,0 +1,24 @@
+Metadata-Version: 2.4
+Name: energy-price-forecast
+Version: 0.1.0
+Summary: Day-ahead electricity price forecasting for Germany, with prediction intervals, anomaly detection and monitoring
+Requires-Python: >=3.12
+Requires-Dist: pandas>=2.2
+Requires-Dist: numpy>=1.26
+Requires-Dist: pyarrow>=16
+Requires-Dist: lightgbm>=4.3
+Requires-Dist: scikit-learn>=1.5
+Requires-Dist: holidays>=0.50
+Requires-Dist: requests>=2.32
+Requires-Dist: fastapi>=0.110
+Requires-Dist: uvicorn>=0.29
+Requires-Dist: joblib>=1.4
+Provides-Extra: research
+Requires-Dist: mlflow>=3.0; extra == "research"
+Requires-Dist: shap>=0.46; extra == "research"
+Requires-Dist: matplotlib>=3.9; extra == "research"
+Requires-Dist: statsmodels>=0.14; extra == "research"
+Provides-Extra: dev
+Requires-Dist: pytest>=8; extra == "dev"
+Requires-Dist: httpx>=0.27; extra == "dev"
+Requires-Dist: ruff>=0.5; extra == "dev"

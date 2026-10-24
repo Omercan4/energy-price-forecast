@@ -1,0 +1,44 @@
+[
+ {
+  "time":"2026-05-01 13:00",
+  "price":-499.0,
+  "q50":-34.1,
+  "z":-19.2,
+  "why":"price -499 EUR\/MWh, 465 lower than forecast (-34); residual load forecast is low (much wind or sun); solar forecast is high; weekend or holiday (low demand)"
+ },
+ {
+  "time":"2026-05-01 14:00",
+  "price":-475.0,
+  "q50":-32.2,
+  "z":-18.7,
+  "why":"price -475 EUR\/MWh, 443 lower than forecast (-32); residual load forecast is low (much wind or sun); solar forecast is high; weekend or holiday (low demand)"
+ },
+ {
+  "time":"2026-09-14 19:00",
+  "price":697.3,
+  "q50":292.0,
+  "z":16.3,
+  "why":"price 697 EUR\/MWh, 405 higher than forecast (292); residual load forecast is high (little wind or sun)"
+ },
+ {
+  "time":"2026-04-26 14:00",
+  "price":-413.2,
+  "q50":-36.1,
+  "z":-15.9,
+  "why":"price -413 EUR\/MWh, 377 lower than forecast (-36); residual load forecast is low (much wind or sun); solar forecast is high; weekend or holiday (low demand)"
+ },
+ {
+  "time":"2026-04-26 13:00",
+  "price":-413.8,
+  "q50":-34.5,
+  "z":-15.6,
+  "why":"price -414 EUR\/MWh, 379 lower than forecast (-35); residual load forecast is low (much wind or sun); solar forecast is high; weekend or holiday (low demand)"
+ },
+ {
+  "time":"2026-06-24 21:00",
+  "price":660.2,
+  "q50":334.1,
+  "z":14.3,
+  "why":"price 660 EUR\/MWh, 326 higher than forecast (334); residual load forecast is high (little wind or sun)"
+ }
+]
