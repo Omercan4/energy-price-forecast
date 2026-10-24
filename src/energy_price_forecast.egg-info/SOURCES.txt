@@ -1,3 +1,5 @@
+LICENSE
+README.md
 pyproject.toml
 src/energy_price_forecast.egg-info/PKG-INFO
 src/energy_price_forecast.egg-info/SOURCES.txt
@@ -9,10 +11,13 @@ src/epf/anomaly.py
 src/epf/backtest.py
 src/epf/cli.py
 src/epf/config.py
+src/epf/explain.py
 src/epf/features.py
 src/epf/forecast.py
 src/epf/metrics.py
 src/epf/monitor.py
+src/epf/report.py
+src/epf/research.py
 src/epf/data/__init__.py
 src/epf/data/build.py
 src/epf/data/http.py
@@ -22,3 +27,13 @@ src/epf/data/weather.py
 src/epf/models/__init__.py
 src/epf/models/baselines.py
 src/epf/models/gbm.py
+src/epf/models/linear.py
+src/epf/serve/__init__.py
+src/epf/serve/app.py
+tests/test_anomaly_monitor.py
+tests/test_api.py
+tests/test_data.py
+tests/test_features.py
+tests/test_forecast.py
+tests/test_metrics.py
+tests/test_model_and_backtest.py

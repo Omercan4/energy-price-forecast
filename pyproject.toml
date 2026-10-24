@@ -4,16 +4,17 @@ version = "0.1.0"
 description = "Day-ahead electricity price forecasting for Germany, with prediction intervals, anomaly detection and monitoring"
 requires-python = ">=3.12"
 dependencies = [
-    "pandas>=2.2",
-    "numpy>=1.26",
-    "pyarrow>=16",
-    "lightgbm>=4.3",
-    "scikit-learn>=1.5",
-    "holidays>=0.50",
-    "requests>=2.32",
-    "fastapi>=0.110",
-    "uvicorn>=0.29",
-    "joblib>=1.4",
+    # Pinned to the tested versions: the saved model (models/champion.joblib) must load the same way everywhere.
+    "pandas==3.1.0",
+    "numpy==2.5.4",
+    "pyarrow==25.0.1",
+    "lightgbm==4.7.0",
+    "scikit-learn==1.9.1",
+    "holidays==0.107",
+    "requests==2.34.2",
+    "fastapi==0.162.0",
+    "uvicorn==0.54.0",
+    "joblib==1.6.0",
 ]
 
 [project.optional-dependencies]
