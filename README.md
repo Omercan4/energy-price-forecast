@@ -45,7 +45,7 @@ a single feature of day D (`tests/test_features.py`).
 | LightGBM + grid operators' forecasts (reference only) | 17.6 | 28.8 | 31.7 |
 
 MAPE is not used because prices are often near zero or negative (1,862 negative-price hours in the data).
-The error is lower in winter (13.8) than in autumn (23.1), and highest in the evening hours.
+The error is lower in winter (13.8) than in autumn (23.1), and it is highest in the evening (19:00 to 20:00) and around midday (12:00 to 14:00), when solar power makes prices swing.
 
 ![Error by hour of the day](docs/img/mae_by_hour.png)
 
