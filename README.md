@@ -138,7 +138,7 @@ retrain with `make train` when the health box shows an alert.
 | Day-ahead prices, grid forecasts | Bundesnetzagentur \| SMARD.de | CC BY 4.0 |
 | Weather forecasts | Open-Meteo.com | CC BY 4.0 (free API for non-commercial use) |
 
-Code: MIT. This project is for learning and demonstration. It is not trading advice.
+Code: MIT. A `secret-scan` workflow (gitleaks) checks the full git history for API keys and tokens on every push and once a week. Keys live only in `.env`, which is git-ignored. This project is for learning and demonstration. It is not trading advice.
 
 ## Next steps
 
