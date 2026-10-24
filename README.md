@@ -8,6 +8,8 @@ model trained only on earlier data. The 80 % prediction interval really contains
 A GitHub Action forecasts the next day every morning and scores the finished days, so the live page cannot go stale or
 offline: **[live page](https://omercan4.github.io/energy-price-forecast/)** (GitHub Pages, updated daily).
 
+![The live page: tomorrow's forecast, model health, last finished days](docs/img/page.jpg)
+
 ![One backtest week: actual price, forecast, 80 % interval](docs/img/week.png)
 
 ## The task, stated precisely
