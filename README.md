@@ -13,9 +13,9 @@ offline: **[live page](https://omercan4.github.io/energy-price-forecast/)** (Git
 
 ![One backtest week: actual price, forecast, 80 % interval](docs/img/week.png)
 
-## 28-second overview
+## A short video overview
 
-[![A 28-second overview: question, backtest chart, result, daily monitoring](docs/media/ad-preview.gif)](docs/media/ad.mp4)
+[![A short video overview: question, backtest chart, result, daily monitoring](docs/media/ad-preview.gif)](docs/media/ad.mp4)
 
 Click the animation for the video (MP4, silent, with captions).
 
