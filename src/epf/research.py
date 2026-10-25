@@ -10,6 +10,7 @@ from epf import anomaly, config, metrics, monitor
 from epf.backtest import CALIBRATION_DAYS, run_backtest
 from epf.data import build, smard
 from epf.features import FULL_FEATURES, SAFE_FEATURES, training_table
+from epf.models import classical
 from epf.models.gbm import QuantileForecaster
 from epf.models.linear import RidgeForecaster
 
@@ -49,14 +50,26 @@ def log_to_mlflow(params=None, scores=None, artifacts=()):
 def backtest_scores(bt: pd.DataFrame) -> dict:
     """All numbers of the backtest in one dict (this becomes docs/results.json and the README table)."""
     actual = bt["price"]
+    classical_failures = {name: int(bt[name].isna().sum()) for name in classical.NAMES if name in bt}
+    for name in classical.NAMES:  # a fit that failed falls back to the seasonal naive forecast, and is counted above
+        if name in bt:
+            bt[name] = bt[name].fillna(bt["naive_24"])
+    statistical = {
+        "seasonal naive, m=24 (same hour yesterday)": bt["naive_24"],
+        "seasonal naive, m=168 (same hour last week)": bt["naive_168"],
+        "seasonal average, 4 weeks": bt["sma_4w"],
+        "Holt-Winters ETS(A,N,A), m=24": bt["ets"],
+        "SARIMA(1,0,0)(1,1,0)24 (AR)": bt["sarima_ar"],
+        "SARIMA(1,0,1)(0,1,1)24 (ARMA + seasonal MA)": bt["sarima_arma"],
+    }
     models = {
-        "naive 24h (yesterday)": bt["naive_24"],
-        "naive 168h (last week)": bt["naive_168"],
-        "ridge regression (safe inputs)": bt["ridge"],
+        **statistical,
+        "ridge regression (AR lags, weather, calendar)": bt["ridge"],
         "LightGBM, safe inputs (released model)": bt["q50"],
         "LightGBM, with grid forecasts (reference)": bt["lgbm_full"],
     }
     table = metrics.score_table(actual, models)
+    best_baseline = table.loc[list(statistical), "MAE"].idxmin()
     local = bt.index.tz_convert(config.TIMEZONE)
     by_hour = pd.DataFrame({"naive_168": (actual - bt["naive_168"]).abs(), "lightgbm": (actual - bt["q50"]).abs()}).groupby(local.hour).mean().round(2)
     by_season = pd.DataFrame({"naive_168": (actual - bt["naive_168"]).abs(), "lightgbm": (actual - bt["q50"]).abs()}).groupby([season(m) for m in local.month]).mean().round(2)
@@ -65,7 +78,10 @@ def backtest_scores(bt: pd.DataFrame) -> dict:
         "from": bt.index.min().isoformat(),
         "to": bt.index.max().isoformat(),
         "models": table.to_dict(orient="index"),
-        "improvement_vs_naive_168_pct": round((1 - table.loc["LightGBM, safe inputs (released model)", "MAE"] / table.loc["naive 168h (last week)", "MAE"]) * 100, 1),
+        "improvement_vs_naive_168_pct": round((1 - table.loc["LightGBM, safe inputs (released model)", "MAE"] / table.loc["seasonal naive, m=168 (same hour last week)", "MAE"]) * 100, 1),
+        "best_statistical_baseline": best_baseline,
+        "improvement_vs_best_statistical_baseline_pct": round((1 - table.loc["LightGBM, safe inputs (released model)", "MAE"] / table.loc[best_baseline, "MAE"]) * 100, 1),
+        "classical_fit_failures": classical_failures,
         "interval_80": {
             "target": 0.8,
             "coverage_calibrated": round(metrics.coverage(actual, bt["q10"], bt["q90"]), 3),
@@ -114,6 +130,7 @@ def run_all(months: int = 12):
                 "lgbm_full": lambda: QuantileForecaster(quantiles=(0.5,), features=FULL_FEATURES),
             },
         )
+        bt = bt.join(classical.classical_backtest(frame["price"], bt.index))
         config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
         bt.to_parquet(config.PROCESSED_DIR / "backtest.parquet")
         scores = backtest_scores(bt)
@@ -129,7 +146,7 @@ def run_all(months: int = 12):
         (config.PROCESSED_DIR / "anomaly_state.json").write_text(json.dumps(anomaly_state, default=float))
         log_to_mlflow(
             params={"months": months, "features_safe": len(SAFE_FEATURES), "features_full": len(FULL_FEATURES), "quantiles": str(config.QUANTILES)},
-            scores={"mae_lightgbm": scores["models"]["LightGBM, safe inputs (released model)"]["MAE"], "mae_lightgbm_full": scores["models"]["LightGBM, with grid forecasts (reference)"]["MAE"], "mae_naive_168": scores["models"]["naive 168h (last week)"]["MAE"],
+            scores={"mae_lightgbm": scores["models"]["LightGBM, safe inputs (released model)"]["MAE"], "mae_lightgbm_full": scores["models"]["LightGBM, with grid forecasts (reference)"]["MAE"], "mae_naive_168": scores["models"]["seasonal naive, m=168 (same hour last week)"]["MAE"],
                     "coverage_80": scores["interval_80"]["coverage_calibrated"], "coverage_80_raw": scores["interval_80"]["coverage_raw"]},
             artifacts=[config.DOCS_DIR / "results.json"],
         )

@@ -77,7 +77,7 @@ async function main() {
   if (h && h.days > 0) {
     box.textContent = h.status === "ok" ? "OK" : "Alert";
     box.className = "big " + (h.status === "ok" ? "ok" : "bad");
-    hd.textContent = `30-day MAE ${h.rolling_mae} (backtest ${h.backtest_mae}, last week baseline ${h.rolling_mae_naive_168 ?? "n/a"})`;
+    hd.textContent = `30-day MAE ${h.rolling_mae} (backtest ${h.backtest_mae}, seasonal naive m=168: ${h.rolling_mae_naive_168 ?? "n/a"})`;
   } else { box.textContent = "starting"; hd.textContent = "needs a few finished days"; }
 
   if (a && a.length) {
@@ -85,7 +85,7 @@ async function main() {
       a.slice(-8).map(x => `<tr><td>${x.time.slice(0, 16).replace("T", " ")}</td><td>${fmt(x.price)}</td><td>${fmt(x.forecast)}</td><td>${x.z}</td></tr>`).join("") + "</table>";
   }
   if (hist && hist.length) {
-    document.getElementById("history").innerHTML = "<table><tr><th>Day</th><th>MAE</th><th>Last week</th><th>In 80 %</th></tr>" +
+    document.getElementById("history").innerHTML = "<table><tr><th>Day</th><th>MAE</th><th>Seasonal naive (m=168)</th><th>In 80 %</th></tr>" +
       hist.slice(-7).reverse().map(x => `<tr><td>${x.day}</td><td>${x.mae}</td><td>${x.mae_naive_168 ?? "-"}</td><td>${Math.round(x.coverage_80 * 100)} %</td></tr>`).join("") + "</table>";
   }
 }

@@ -30,7 +30,7 @@ def week_figure(local: pd.DataFrame) -> None:
     ax.fill_between(week.index, week["q10"], week["q90"], color=BLUE, alpha=0.18, label="80 % interval (q10 to q90)")
     ax.plot(week.index, week["q50"], color=BLUE, lw=2, label="forecast (median)")
     ax.plot(week.index, week["price"], color="black", lw=1.4, label="actual day-ahead price")
-    ax.plot(week.index, week["naive_168"], color=GREY, lw=1, ls="--", label="same hour last week (baseline)")
+    ax.plot(week.index, week["naive_168"], color=GREY, lw=1, ls="--", label="seasonal naive, m=168 (baseline)")
     ax.set_ylabel("EUR/MWh")
     ax.set_title("Day-ahead price: forecast vs. actual (backtest, one week, model trained only on earlier data)")
     ax.legend(loc="upper left", ncol=2, fontsize=8)
@@ -41,10 +41,10 @@ def week_figure(local: pd.DataFrame) -> None:
 
 
 def hour_figure(local: pd.DataFrame) -> None:
-    errors = pd.DataFrame({"last week": (local["price"] - local["naive_168"]).abs(), "LightGBM": (local["price"] - local["q50"]).abs()})
+    errors = pd.DataFrame({"seasonal naive m=168": (local["price"] - local["naive_168"]).abs(), "LightGBM": (local["price"] - local["q50"]).abs()})
     by_hour = errors.groupby(local.index.hour).mean()
     fig, ax = plt.subplots(figsize=(8, 3.6))
-    ax.plot(by_hour.index, by_hour["last week"], color=GREY, marker="o", ms=3, label="same hour last week")
+    ax.plot(by_hour.index, by_hour["seasonal naive m=168"], color=GREY, marker="o", ms=3, label="seasonal naive, m=168")
     ax.plot(by_hour.index, by_hour["LightGBM"], color=BLUE, marker="o", ms=3, label="LightGBM (safe inputs)")
     ax.set_xlabel("hour of the day (local time)")
     ax.set_ylabel("MAE, EUR/MWh")
@@ -58,18 +58,24 @@ def hour_figure(local: pd.DataFrame) -> None:
 
 def models_figure(local: pd.DataFrame) -> None:
     models = {
-        "last day": local["naive_24"],
-        "last week": local["naive_168"],
+        "seasonal\nnaive m=24": local["naive_24"],
+        "seasonal\nnaive m=168": local["naive_168"],
+        "seasonal\naverage 4w": local["sma_4w"],
+        "Holt-\nWinters": local["ets"],
+        "SARIMA\nAR": local["sarima_ar"],
+        "SARIMA\nARMA": local["sarima_arma"],
         "ridge": local["ridge"],
-        "LightGBM\n(safe inputs)": local["q50"],
-        "LightGBM\n(+ grid forecasts)": local["lgbm_full"],
+        "LightGBM\n(safe)": local["q50"],
+        "LightGBM\n(+ grid fc.)": local["lgbm_full"],
     }
     values = [metrics.mae(local["price"], f) for f in models.values()]
-    fig, ax = plt.subplots(figsize=(8, 3.6))
-    bars = ax.bar(list(models), values, color=[GREY, GREY, GREY, BLUE, ORANGE])
+    colors = [GREY] * 6 + [GREY, BLUE, ORANGE]
+    fig, ax = plt.subplots(figsize=(10, 4))
+    bars = ax.bar(list(models), values, color=colors)
     ax.bar_label(bars, fmt="%.1f", padding=2)
     ax.set_ylabel("MAE, EUR/MWh (lower is better)")
     ax.set_title("Model comparison, 12-month rolling backtest")
+    ax.tick_params(axis="x", labelsize=8.5)
     ax.grid(axis="y", alpha=0.25)
     fig.tight_layout()
     fig.savefig(IMG / "models.png", dpi=150)

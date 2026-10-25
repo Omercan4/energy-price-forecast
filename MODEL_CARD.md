@@ -16,7 +16,7 @@ on the last 60 days of the training data (conformalized quantile regression). Tr
 Not used in the released model: the grid operators' load, wind and solar forecasts (published too late), fuel and CO2 prices (no source).
 
 ## Evaluation
-12-month rolling-origin backtest (each month predicted by a model trained on earlier data only). MAE 19.6 EUR/MWh vs. 37.4 for "same hour last week".
+12-month rolling-origin backtest (each month predicted by a model trained on earlier data only). MAE 19.6 EUR/MWh. Best classical baseline: Holt-Winters ETS(A,N,A) with m = 24, MAE 25.2 (the model is 22.3 % better). Seasonal naive with m = 168: MAE 37.4 (47.6 % better).
 80 % interval coverage 79.0 %. Details, tables and figures in the README.
 
 ## Known limits

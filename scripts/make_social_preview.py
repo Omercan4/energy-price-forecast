@@ -35,7 +35,7 @@ def main():
     results = json.loads((config.DOCS_DIR / "results.json").read_text())
     models = results["models"]
     mae_model = models["LightGBM, safe inputs (released model)"]["MAE"]
-    improvement = results["improvement_vs_naive_168_pct"]
+    improvement = results["improvement_vs_best_statistical_baseline_pct"]
     coverage = results["interval_80"]["coverage_calibrated"] * 100
     bt = pd.read_parquet(config.PROCESSED_DIR / "backtest.parquet")
 
@@ -51,7 +51,7 @@ def main():
     ax.text(64, 178, "\n".join(textwrap.wrap(subtitle, 46)), color=MUTED, fontsize=17, va="top", linespacing=1.4)
 
     stats = [
-        (f"-{improvement:.1f} %", "error vs. same hour\nlast week (backtest)", GREEN),
+        (f"-{improvement:.1f} %", "error vs. the best classical\nbaseline (Holt-Winters)", GREEN),
         (f"{coverage:.0f} %", "of prices inside\nthe 80 % interval", BLUE),
         ("daily", "forecast and monitoring\nby GitHub Actions", BLUE),
     ]
@@ -76,7 +76,7 @@ def main():
         spine.set_color(LINE)
     chart.grid(color=LINE, alpha=0.5, lw=0.6)
     fig.text(0.575, 0.80, "One backtest week", color=FG, fontsize=12, fontweight="bold")
-    legend = [("actual price", FG, "-"), ("forecast + 80 % interval", BLUE, "-"), ("same hour last week", MUTED, "--")]
+    legend = [("actual price", FG, "-"), ("forecast + 80 % interval", BLUE, "-"), ("seasonal naive, m=168", MUTED, "--")]
     for i, (label, color, style) in enumerate(legend):
         fig.text(0.575 + i * 0.135, 0.185, label, color=color, fontsize=9.5)
 

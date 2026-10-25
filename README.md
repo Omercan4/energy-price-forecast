@@ -2,8 +2,9 @@
 
 ![CI](https://github.com/Omercan4/energy-price-forecast/actions/workflows/ci.yml/badge.svg)
 
-**Result:** a LightGBM model forecasts tomorrow's 24 hourly day-ahead prices for Germany with an **MAE of 19.6 EUR/MWh,
-47.6 % lower than "same hour last week" (37.4)**, over a 12-month rolling backtest in which every month is forecast by a
+**Result:** a LightGBM model forecasts tomorrow's 24 hourly day-ahead prices for Germany with an **MAE of 19.6 EUR/MWh:
+22.3 % lower than the best classical baseline (Holt-Winters exponential smoothing, 25.2) and 47.6 % lower than the seasonal naive
+forecast with m = 168 (37.4)**, over a 12-month rolling backtest in which every month is forecast by a
 model trained only on earlier data. The 80 % prediction interval really contains **79 %** of the actual prices.
 A GitHub Action forecasts the next day every morning and scores the finished days, so the live page cannot go stale or
 offline: **[live page](https://omercan4.github.io/energy-price-forecast/)** (GitHub Pages, updated daily).
@@ -58,7 +59,7 @@ flowchart TB
 | `src/epf/data/` | Downloads SMARD prices and grid forecasts and Open-Meteo weather forecasts, caches them, checks data quality |
 | `src/epf/features.py` | Calendar, weather forecast and price-history features. Lags follow the *local* clock (daylight saving safe) |
 | `src/epf/backtest.py` | Rolling-origin backtest: each month is forecast by a model trained on earlier data only |
-| `src/epf/models/` | Naive baselines, ridge regression, LightGBM quantile models with conformal interval calibration |
+| `src/epf/models/` | Statistical baselines (seasonal naive, seasonal average, Holt-Winters, SARIMA), ridge regression, LightGBM quantile models with conformal interval calibration |
 | `src/epf/anomaly.py` | Unusual hours: robust z-score of the forecast error per hour of day, compared with an Isolation Forest |
 | `src/epf/monitor.py` | After release: rolling error vs. backtest, input drift (PSI), alerts |
 | `src/epf/serve/` + `docs/index.html` | FastAPI and the web page (the same page is served by GitHub Pages) |
@@ -69,13 +70,25 @@ flowchart TB
 
 ![Model comparison](docs/img/models.png)
 
+Statistical baselines are named as in the forecasting literature. All of them are refitted for every day on the last 28 days
+and only see prices before that day, so they know exactly as much as the machine learning model.
+"m" is the season length in hours: m = 24 is a daily season, m = 168 a weekly season.
+
 | Model | MAE | RMSE | sMAPE % |
 | --- | --- | --- | --- |
-| same hour yesterday | 29.8 | 47.3 | 45.2 |
-| same hour last week | 37.4 | 57.5 | 52.7 |
-| ridge regression (same inputs as the released model) | 23.8 | 34.5 | 37.4 |
+| seasonal naive, m = 24 (the price of the same hour yesterday) | 29.8 | 47.3 | 45.2 |
+| seasonal naive, m = 168 (the price of the same hour last week) | 37.4 | 57.5 | 52.7 |
+| seasonal average, 4 weeks (mean of the same hour over the last 4 weeks) | 32.2 | 46.6 | 44.8 |
+| Holt-Winters exponential smoothing, ETS(A,N,A), m = 24 | 25.2 | 39.1 | 39.1 |
+| SARIMA(1,0,0)(1,1,0)24 (AR(1) + seasonal AR(1)) | 27.4 | 43.8 | 41.8 |
+| SARIMA(1,0,1)(0,1,1)24 (ARMA(1,1) + seasonal MA(1)) | 26.7 | 41.6 | 40.3 |
+| ridge regression (AR lags, weather forecasts, calendar) | 23.8 | 34.5 | 37.4 |
 | **LightGBM, safe inputs (released model)** | **19.6** | **31.3** | **32.3** |
 | LightGBM + grid operators' forecasts (reference only) | 17.6 | 28.8 | 31.7 |
+
+The best classical baseline is Holt-Winters; the released model is **22.3 % better than it** (19.6 vs. 25.2). Against the
+weakest baseline, the seasonal naive forecast with m = 168, the gain is 47.6 %. The first number is the honest one to quote,
+because a model should be compared with the best simple alternative, not the worst.
 
 MAPE is not used because prices are often near zero or negative (1,862 negative-price hours in the data).
 The error is lower in winter (13.8) than in autumn (23.1), and it is highest in the evening (19:00 to 20:00) and around midday (12:00 to 14:00), when solar power makes prices swing.
@@ -88,7 +101,7 @@ how much wider the interval has to be) fixes this: coverage is now **79.0 %**, a
 (mean width 52 to 61 EUR/MWh).
 
 **What moves the forecast** (mean |SHAP| of the median model, `docs/img/shap.png`): yesterday's price at the same hour,
-the wind forecast at the North Sea, the weekday, last week's price at the same hour and solar radiation.
+the wind forecast at the North Sea, the weekday, the price of the same hour last week (the lag at 168 hours) and solar radiation.
 
 ![Drivers](docs/img/shap.png)
 
@@ -105,11 +118,12 @@ the wind forecast at the North Sea, the weekday, last week's price at the same h
   its precision is 0.52 and recall 0.12; an Isolation Forest that sees the price itself gets 0.64 and 0.15 at the same
   flag rate. The two answer different questions: the Isolation Forest finds extreme prices, the residual detector finds
   surprises given the conditions. Example hours with a plain-language reason are in `docs/anomaly_examples.json`.
-- **Bugs I found by testing the 25-hour day** (clocks go back on 25 Oct 2026): "same hour yesterday" was shifted by one hour
+- **Bugs I found by testing the 25-hour day** (clocks go back on 25 Oct 2026): the lag "same local hour yesterday" was shifted by one hour
   after a clock change, and for the last hour it looked into the day being forecast. Lags are now computed on the local clock
   and covered by tests.
 - No fuel or CO2 prices are used (no free, reliable daily source), and the model sees one market (DE-LU).
-- Not tried: a zero-shot time-series foundation model as an extra baseline.
+- Not tried: a zero-shot time-series foundation model as an extra baseline, and SARIMA with exogenous regressors (SARIMAX). The ridge
+  regression is the closest thing to an ARX model here: autoregressive lags plus exogenous inputs.
 
 ## Run it
 

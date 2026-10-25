@@ -3,17 +3,37 @@
  "from": "2025-09-30T22:00:00+00:00",
  "to": "2026-09-30T21:00:00+00:00",
  "models": {
-  "naive 24h (yesterday)": {
+  "seasonal naive, m=24 (same hour yesterday)": {
    "MAE": 29.82,
    "RMSE": 47.34,
    "sMAPE %": 45.24
   },
-  "naive 168h (last week)": {
+  "seasonal naive, m=168 (same hour last week)": {
    "MAE": 37.38,
    "RMSE": 57.46,
    "sMAPE %": 52.7
   },
-  "ridge regression (safe inputs)": {
+  "seasonal average, 4 weeks": {
+   "MAE": 32.22,
+   "RMSE": 46.6,
+   "sMAPE %": 44.8
+  },
+  "Holt-Winters ETS(A,N,A), m=24": {
+   "MAE": 25.19,
+   "RMSE": 39.06,
+   "sMAPE %": 39.13
+  },
+  "SARIMA(1,0,0)(1,1,0)24 (AR)": {
+   "MAE": 27.37,
+   "RMSE": 43.78,
+   "sMAPE %": 41.79
+  },
+  "SARIMA(1,0,1)(0,1,1)24 (ARMA + seasonal MA)": {
+   "MAE": 26.66,
+   "RMSE": 41.61,
+   "sMAPE %": 40.31
+  },
+  "ridge regression (AR lags, weather, calendar)": {
    "MAE": 23.81,
    "RMSE": 34.52,
    "sMAPE %": 37.42
@@ -30,6 +50,14 @@
   }
  },
  "improvement_vs_naive_168_pct": 47.6,
+ "best_statistical_baseline": "Holt-Winters ETS(A,N,A), m=24",
+ "improvement_vs_best_statistical_baseline_pct": 22.3,
+ "classical_fit_failures": {
+  "sma_4w": 0,
+  "ets": 0,
+  "sarima_ar": 0,
+  "sarima_arma": 0
+ },
  "interval_80": {
   "target": 0.8,
   "coverage_calibrated": 0.79,
