@@ -20,6 +20,14 @@ That sentence decides which inputs are allowed. The prices of day D-1 are known,
 for day D are known, measured weather is not. The tests check that changing the prices of day D does not change
 a single feature of day D (`tests/test_features.py`).
 
+## Learn how it works: the notebook
+
+[`notebooks/01_end_to_end_walkthrough.ipynb`](notebooks/01_end_to_end_walkthrough.ipynb) walks through the whole process in 10 sections, with the
+reasoning at every step and the outputs already saved (GitHub shows them without running anything): the task and what is allowed to be known,
+the data, leakage-free features (with a live leakage test and the 25-hour-day trap), baselines, the quantile model, interval calibration step by
+step, the rolling backtest, SHAP, anomalies, and release and monitoring. It uses the real `epf` package, so it shows exactly what the daily job runs.
+To run it yourself: `pip install -e ".[research,notebook]"`, `make data`, then `make notebook`.
+
 ## Architecture
 
 ```mermaid
