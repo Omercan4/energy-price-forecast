@@ -61,6 +61,7 @@ def backtest_scores(bt: pd.DataFrame) -> dict:
         "Holt-Winters ETS(A,N,A), m=24": bt["ets"],
         "SARIMA(1,0,0)(1,1,0)24 (AR)": bt["sarima_ar"],
         "SARIMA(1,0,1)(0,1,1)24 (ARMA + seasonal MA)": bt["sarima_arma"],
+        "SARIMAX(1,0,1)(0,1,1)24 + weather forecasts": bt["sarimax"],
     }
     models = {
         **statistical,
@@ -130,7 +131,7 @@ def run_all(months: int = 12):
                 "lgbm_full": lambda: QuantileForecaster(quantiles=(0.5,), features=FULL_FEATURES),
             },
         )
-        bt = bt.join(classical.classical_backtest(frame["price"], bt.index))
+        bt = bt.join(classical.classical_backtest(frame["price"], bt.index, exog=frame))
         config.PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
         bt.to_parquet(config.PROCESSED_DIR / "backtest.parquet")
         scores = backtest_scores(bt)

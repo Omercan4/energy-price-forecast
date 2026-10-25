@@ -82,11 +82,13 @@ and only see prices before that day, so they know exactly as much as the machine
 | Holt-Winters exponential smoothing, ETS(A,N,A), m = 24 | 25.2 | 39.1 | 39.1 |
 | SARIMA(1,0,0)(1,1,0)24 (AR(1) + seasonal AR(1)) | 27.4 | 43.8 | 41.8 |
 | SARIMA(1,0,1)(0,1,1)24 (ARMA(1,1) + seasonal MA(1)) | 26.7 | 41.6 | 40.3 |
+| SARIMAX(1,0,1)(0,1,1)24 + the 4 weather forecasts as exogenous regressors | 25.6 | 40.1 | 39.3 |
 | ridge regression (AR lags, weather forecasts, calendar) | 23.8 | 34.5 | 37.4 |
 | **LightGBM, safe inputs (released model)** | **19.6** | **31.3** | **32.3** |
 | LightGBM + grid operators' forecasts (reference only) | 17.6 | 28.8 | 31.7 |
 
-The best classical baseline is Holt-Winters; the released model is **22.3 % better than it** (19.6 vs. 25.2). Against the
+The best classical baseline is Holt-Winters; the released model is **22.3 % better than it** (19.6 vs. 25.2). Giving the SARIMA model the
+weather forecasts as exogenous regressors (SARIMAX) helps (26.7 to 25.6), but it stays slightly behind Holt-Winters. Against the
 weakest baseline, the seasonal naive forecast with m = 168, the gain is 47.6 %. The first number is the honest one to quote,
 because a model should be compared with the best simple alternative, not the worst.
 
@@ -122,8 +124,8 @@ the wind forecast at the North Sea, the weekday, the price of the same hour last
   after a clock change, and for the last hour it looked into the day being forecast. Lags are now computed on the local clock
   and covered by tests.
 - No fuel or CO2 prices are used (no free, reliable daily source), and the model sees one market (DE-LU).
-- Not tried: a zero-shot time-series foundation model as an extra baseline, and SARIMA with exogenous regressors (SARIMAX). The ridge
-  regression is the closest thing to an ARX model here: autoregressive lags plus exogenous inputs.
+- Not tried: a zero-shot time-series foundation model as an extra baseline, and SARIMA orders chosen by a search (AIC). The orders above are
+  fixed, standard choices. The ridge regression is an ARX-style model: autoregressive lags plus exogenous inputs.
 
 ## Run it
 

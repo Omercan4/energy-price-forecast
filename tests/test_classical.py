@@ -51,3 +51,18 @@ def test_the_backtest_forecasts_only_from_prices_before_each_day():
     first_day = test_index[local_dates == local_dates[0]]  # the first LOCAL day is forecast from history only, so it cannot change
     pd.testing.assert_frame_equal(a.loc[first_day, ["ets", "sarima_ar", "sarima_arma"]], b.loc[first_day, ["ets", "sarima_ar", "sarima_arma"]])
     assert list(a.columns) == classical.NAMES
+
+
+def test_sarimax_uses_the_exogenous_weather_and_finds_a_weather_driven_signal():
+    rng = np.random.default_rng(1)
+    index = pd.date_range("2025-05-01", periods=45 * 24, freq="h", tz="UTC")
+    weather = pd.DataFrame({name: rng.normal(0, 1, len(index)) for name in classical.EXOG}, index=index)
+    price = pd.Series(50 + 20 * weather["wind_ns"].to_numpy() + rng.normal(0, 0.5, len(index)), index=index)  # price follows the wind
+    test_index = index[-24:]
+    history = price.iloc[: -24].to_numpy()[-classical.HISTORY_HOURS:]
+    x = weather[classical.EXOG]
+
+    out = classical.forecast_one_day(history, 24, x.reindex(price.index[: -24][-classical.HISTORY_HOURS:]).to_numpy(), x.reindex(test_index).to_numpy())
+
+    assert np.abs(out["sarimax"] - price.iloc[-24:].to_numpy()).mean() < 8
+    assert np.abs(out["sarima_arma"] - price.iloc[-24:].to_numpy()).mean() > np.abs(out["sarimax"] - price.iloc[-24:].to_numpy()).mean()  # it needs the wind

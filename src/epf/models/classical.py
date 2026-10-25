@@ -8,6 +8,8 @@ last 28 days. That is the same information the machine learning model has, so th
   Holt-Winters           exponential smoothing with additive seasonality, ETS(A,N,A), m = 24
   SARIMA(1,0,0)(1,1,0)24 an autoregressive model: AR(1), plus a seasonal AR(1) on the 24-hour seasonal difference
   SARIMA(1,0,1)(0,1,1)24 ARMA(1,1) plus a seasonal MA(1) on the 24-hour seasonal difference ("airline-type" model)
+  SARIMAX                the same SARIMA(1,0,1)(0,1,1)24 plus exogenous regressors: the four weather forecasts of the day
+                         (temperature, solar radiation, wind at the North Sea and inland). Same information as ridge and LightGBM.
 """
 
 import warnings
@@ -24,7 +26,8 @@ from epf.features import local_hour_lag
 HISTORY_HOURS = 28 * 24
 SARIMA_AR = ((1, 0, 0), (1, 1, 0, 24))
 SARIMA_ARMA = ((1, 0, 1), (0, 1, 1, 24))
-NAMES = ["sma_4w", "ets", "sarima_ar", "sarima_arma"]
+EXOG = ["temp", "rad", "wind_ns", "wind_inland"]
+NAMES = ["sma_4w", "ets", "sarima_ar", "sarima_arma", "sarimax"]
 
 
 def seasonal_average(price: pd.Series, weeks: int = 4) -> pd.Series:
@@ -34,8 +37,9 @@ def seasonal_average(price: pd.Series, weeks: int = 4) -> pd.Series:
     return pd.Series(np.nanmean(lags, axis=1), index=price.index)
 
 
-def forecast_one_day(history: np.ndarray, horizon: int) -> dict[str, np.ndarray]:
-    """ETS and the two SARIMA models for the next `horizon` hours. A model that fails returns NaN."""
+def forecast_one_day(history: np.ndarray, horizon: int, exog_history: np.ndarray | None = None, exog_future: np.ndarray | None = None) -> dict[str, np.ndarray]:
+    """ETS, the two SARIMA models and (with exogenous inputs) SARIMAX for the next `horizon` hours.
+    A model that fails returns NaN."""
     out = {}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
@@ -52,21 +56,37 @@ def forecast_one_day(history: np.ndarray, horizon: int) -> dict[str, np.ndarray]
                 out[name] = fit.forecast(horizon)
             except Exception:
                 out[name] = np.full(horizon, np.nan)
+        if exog_history is not None and exog_future is not None:
+            try:
+                mean, std = exog_history.mean(axis=0), exog_history.std(axis=0) + 1e-9  # standardised, so the optimiser converges
+                fit = SARIMAX(history, exog=(exog_history - mean) / std, order=SARIMA_ARMA[0], seasonal_order=SARIMA_ARMA[1],
+                              enforce_stationarity=False, enforce_invertibility=False).fit(disp=False, maxiter=60)
+                out["sarimax"] = fit.forecast(horizon, exog=(exog_future - mean) / std)
+            except Exception:
+                out["sarimax"] = np.full(horizon, np.nan)
     return out
 
 
-def classical_backtest(price: pd.Series, test_index: pd.DatetimeIndex, n_jobs: int = -1) -> pd.DataFrame:
-    """Forecasts of the classical models for every hour in `test_index`, one fit per local day."""
+def classical_backtest(price: pd.Series, test_index: pd.DatetimeIndex, n_jobs: int = -1, exog: pd.DataFrame | None = None) -> pd.DataFrame:
+    """Forecasts of the classical models for every hour in `test_index`, one fit per local day.
+    exog: the weather forecasts (columns EXOG), needed for SARIMAX."""
     price = price.dropna()
     local_days = pd.Series(test_index.tz_convert(config.TIMEZONE).date, index=test_index)
     jobs = []
     for _, hours in local_days.groupby(local_days):
         start = hours.index.min()
-        history = price[price.index < start].iloc[-HISTORY_HOURS:].to_numpy()
-        jobs.append((hours.index, history, len(hours)))
-    results = Parallel(n_jobs=n_jobs)(delayed(forecast_one_day)(history, horizon) for _, history, horizon in jobs)
-    frame = pd.DataFrame(index=test_index, columns=["ets", "sarima_ar", "sarima_arma"], dtype=float)
-    for (idx, _, _), res in zip(jobs, results):
+        past = price[price.index < start].iloc[-HISTORY_HOURS:]
+        exog_history = exog_future = None
+        if exog is not None:
+            x = exog[EXOG]
+            exog_history = x.reindex(past.index).to_numpy(dtype=float)
+            exog_future = x.reindex(hours.index).to_numpy(dtype=float)
+            if np.isnan(exog_history).any() or np.isnan(exog_future).any():
+                exog_history = exog_future = None  # an incomplete weather forecast: SARIMAX falls back below
+        jobs.append((hours.index, past.to_numpy(), len(hours), exog_history, exog_future))
+    results = Parallel(n_jobs=n_jobs)(delayed(forecast_one_day)(h, n, eh, ef) for _, h, n, eh, ef in jobs)
+    frame = pd.DataFrame(index=test_index, columns=["ets", "sarima_ar", "sarima_arma", "sarimax"], dtype=float)
+    for (idx, *_), res in zip(jobs, results):
         for name, values in res.items():
             frame.loc[idx, name] = values
     frame["sma_4w"] = seasonal_average(price).reindex(test_index).to_numpy()

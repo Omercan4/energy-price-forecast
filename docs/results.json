@@ -33,6 +33,11 @@
    "RMSE": 41.61,
    "sMAPE %": 40.31
   },
+  "SARIMAX(1,0,1)(0,1,1)24 + weather forecasts": {
+   "MAE": 25.62,
+   "RMSE": 40.06,
+   "sMAPE %": 39.33
+  },
   "ridge regression (AR lags, weather, calendar)": {
    "MAE": 23.81,
    "RMSE": 34.52,
@@ -56,7 +61,8 @@
   "sma_4w": 0,
   "ets": 0,
   "sarima_ar": 0,
-  "sarima_arma": 0
+  "sarima_arma": 0,
+  "sarimax": 0
  },
  "interval_80": {
   "target": 0.8,

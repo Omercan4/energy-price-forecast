@@ -64,13 +64,14 @@ def models_figure(local: pd.DataFrame) -> None:
         "Holt-\nWinters": local["ets"],
         "SARIMA\nAR": local["sarima_ar"],
         "SARIMA\nARMA": local["sarima_arma"],
+        "SARIMAX\n+ weather": local["sarimax"],
         "ridge": local["ridge"],
         "LightGBM\n(safe)": local["q50"],
         "LightGBM\n(+ grid fc.)": local["lgbm_full"],
     }
     values = [metrics.mae(local["price"], f) for f in models.values()]
-    colors = [GREY] * 6 + [GREY, BLUE, ORANGE]
-    fig, ax = plt.subplots(figsize=(10, 4))
+    colors = [GREY] * 7 + [GREY, BLUE, ORANGE]
+    fig, ax = plt.subplots(figsize=(11, 4))
     bars = ax.bar(list(models), values, color=colors)
     ax.bar_label(bars, fmt="%.1f", padding=2)
     ax.set_ylabel("MAE, EUR/MWh (lower is better)")
