@@ -17,8 +17,6 @@ import warnings
 import numpy as np
 import pandas as pd
 from joblib import Parallel, delayed
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
-from statsmodels.tsa.statespace.sarimax import SARIMAX
 
 from epf import config
 from epf.features import local_hour_lag
@@ -40,6 +38,10 @@ def seasonal_average(price: pd.Series, weeks: int = 4) -> pd.Series:
 def forecast_one_day(history: np.ndarray, horizon: int, exog_history: np.ndarray | None = None, exog_future: np.ndarray | None = None) -> dict[str, np.ndarray]:
     """ETS, the two SARIMA models and (with exogenous inputs) SARIMAX for the next `horizon` hours.
     A model that fails returns NaN."""
+    # imported here, not at the top: the daily forecast job does not install statsmodels, only the research code needs it
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+
     out = {}
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
