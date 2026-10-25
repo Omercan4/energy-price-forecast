@@ -13,6 +13,12 @@ offline: **[live page](https://omercan4.github.io/energy-price-forecast/)** (Git
 
 ![One backtest week: actual price, forecast, 80 % interval](docs/img/week.png)
 
+## 28-second overview
+
+[![A 28-second overview: question, backtest chart, result, daily monitoring](docs/media/ad-preview.gif)](docs/media/ad.mp4)
+
+Click the animation for the video (MP4, silent, with captions).
+
 ## The task, stated precisely
 
 > Predict the 24 hourly day-ahead prices (DE-LU) of day D, using only what is known before the auction at 12:00 on day D-1.
