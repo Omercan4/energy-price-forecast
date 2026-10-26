@@ -1,17 +1,17 @@
 {
  "status": "ok",
- "days": 1,
- "rolling_mae": 12.29,
- "rolling_mae_naive_168": 162.4,
+ "days": 2,
+ "rolling_mae": 28.16,
+ "rolling_mae_naive_168": 127.3,
  "backtest_mae": 19.58,
- "coverage_80": 1.0,
+ "coverage_80": 0.791,
  "alert_threshold": 29.37,
  "drift_psi": {
-  "load_fc": 0.038,
-  "residual_load_fc": 0.033,
-  "wind_ns": 0.045,
-  "temp": 0.037
+  "load_fc": 0.025,
+  "residual_load_fc": 0.047,
+  "wind_ns": 0.068,
+  "temp": 0.052
  },
  "drift_alert": false,
- "updated_at": "2026-10-25T13:53:09+00:00"
+ "updated_at": "2026-10-26T13:49:24+00:00"
 }
