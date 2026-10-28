@@ -10,8 +10,8 @@
   "load_fc": 0.025,
   "residual_load_fc": 0.033,
   "wind_ns": 0.084,
-  "temp": 0.09
+  "temp": 0.091
  },
  "drift_alert": false,
- "updated_at": "2026-10-28T13:45:08+00:00"
+ "updated_at": "2026-10-28T14:39:32+00:00"
 }
