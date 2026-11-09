@@ -8,10 +8,10 @@
  "alert_threshold": 29.37,
  "drift_psi": {
   "load_fc": 0.185,
-  "residual_load_fc": 0.036,
-  "wind_ns": 0.034,
-  "temp": 0.184
+  "residual_load_fc": 0.035,
+  "wind_ns": 0.035,
+  "temp": 0.181
  },
  "drift_alert": false,
- "updated_at": "2026-11-09T17:05:13+00:00"
+ "updated_at": "2026-11-09T17:55:50+00:00"
 }
