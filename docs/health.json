@@ -7,11 +7,11 @@
  "coverage_80": 0.761,
  "alert_threshold": 29.37,
  "drift_psi": {
-  "load_fc": 0.059,
+  "load_fc": 0.06,
   "residual_load_fc": 0.017,
-  "wind_ns": 0.045,
-  "temp": 0.729
+  "wind_ns": 0.047,
+  "temp": 0.731
  },
  "drift_alert": true,
- "updated_at": "2026-11-16T17:38:37+00:00"
+ "updated_at": "2026-11-16T19:47:51+00:00"
 }
