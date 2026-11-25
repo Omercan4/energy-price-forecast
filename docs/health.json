@@ -9,9 +9,9 @@
  "drift_psi": {
   "load_fc": 0.05,
   "residual_load_fc": 0.045,
-  "wind_ns": 0.072,
+  "wind_ns": 0.071,
   "temp": 0.962
  },
  "drift_alert": true,
- "updated_at": "2026-11-25T17:45:49+00:00"
+ "updated_at": "2026-11-25T18:16:25+00:00"
 }
