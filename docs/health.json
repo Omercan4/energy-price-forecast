@@ -1,17 +1,17 @@
 {
  "status": "alert",
- "days": 27,
- "rolling_mae": 37.77,
- "rolling_mae_naive_168": 97.72,
+ "days": 28,
+ "rolling_mae": 37.85,
+ "rolling_mae_naive_168": 99.42,
  "backtest_mae": 19.58,
- "coverage_80": 0.752,
+ "coverage_80": 0.74,
  "alert_threshold": 29.37,
  "drift_psi": {
-  "load_fc": 0.05,
-  "residual_load_fc": 0.045,
-  "wind_ns": 0.071,
-  "temp": 0.962
+  "load_fc": 0.058,
+  "residual_load_fc": 0.059,
+  "wind_ns": 0.083,
+  "temp": 1.035
  },
  "drift_alert": true,
- "updated_at": "2026-11-25T19:32:27+00:00"
+ "updated_at": "2026-11-26T17:29:54+00:00"
 }
